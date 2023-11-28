@@ -20,7 +20,8 @@ interior_list_pep = []
 
 for pep_a in peps_tr:
     name_pep = pep_a.find('a')
-    title_name_general = name_pep['title']  # Название PEP из внешней таблицы
+    title_name_general = name_pep['title'].split(' – ')[0]
+    # Название PEP из внешней таблицы
 
     td_pep = pep_a.find('td')
     abbr_pep = td_pep.find('abbr')
@@ -36,9 +37,8 @@ for pep_a in peps_tr:
     response1 = session.get(pep_link)
     response1.encoding = 'utf-8'
     soup = BeautifulSoup(response1.text, 'lxml')
-    in_card_pep_name = soup.find('title').text.replace(
-        " | peps.python.org", ""
-    )  # Спарсенное наименование PEP внутри карточки
+    in_card_pep_name = soup.find('title').text.split(' – ')[0]
+    # Спарсенное наименование PEP внутри карточки
 
     status_in_card_pep = soup.find('abbr').text  # Спарсенный статус внутри PEP
 
@@ -46,5 +46,8 @@ for pep_a in peps_tr:
         print('Найдено отличие. ')
     dict_pep_int = {status_in_card_pep: in_card_pep_name}
     interior_list_pep.append(dict_pep_int)
-print(exterior_list_pep)
-print(interior_list_pep)
+# print(exterior_list_pep)
+print(interior_list_pep)  # в этом списке 630 елементов
+
+# теперь надо сделать цикл по списку и проверкой через ключи
+# сделать подсчет всех статусов
