@@ -2,6 +2,8 @@ from urllib.parse import urljoin
 import requests_cache
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+from prettytable import PrettyTable
+from collections import Counter
 
 from constants import PEPS_DOC_URL
 from utils import compare_statuses
@@ -45,7 +47,13 @@ if __name__ == '__main__':
 
         compare_statuses_dict = {status_pep_general: status_in_card_pep}
         compare_list_statuses.append(compare_statuses_dict)
-    print(in_card_statuses)
-    count_statuses_in = len(in_card_statuses)
+
+    status_count = Counter(in_card_statuses)
+    table = PrettyTable()
+    table.field_names = ['Статус', 'Количество']
+    for status, count in sorted(status_count.items()):
+        table.add_row([status, count])
+    table.add_row(['----------', '----------'])
+    table.add_row(['Total', sum(status_count.values())])
+    print(table)
     compare_statuses(compare_list_statuses)
-    print(count_statuses_in)
