@@ -1,3 +1,4 @@
+import logging
 from urllib.parse import urljoin
 from collections import Counter
 
@@ -9,10 +10,12 @@ from prettytable import PrettyTable
 from constants import PEPS_DOC_URL
 from utils import compare_statuses
 from outputs import file_outputs
+from configs import configure_logging
 
 
 if __name__ == '__main__':
-
+    configure_logging()
+    logging.info('Парсер запущен!')
     session = requests_cache.CachedSession()
     response = session.get(PEPS_DOC_URL)
     response.encoding = 'utf-8'
@@ -49,3 +52,4 @@ if __name__ == '__main__':
     table.add_row(['Total', total_peps])
     file_outputs(dict(status_count), total_peps)
     print(table)
+    logging.info('Парсер завершил работу!')
