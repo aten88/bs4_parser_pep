@@ -7,6 +7,7 @@ from collections import Counter
 
 from constants import PEPS_DOC_URL
 from utils import compare_statuses
+from outputs import file_outputs
 
 
 if __name__ == '__main__':
@@ -21,12 +22,9 @@ if __name__ == '__main__':
     peps_tr = peps_body_table.find_all('tr')
 
     compare_list_statuses = []
-    in_card_statuses = []
 
     for pep_a in tqdm(peps_tr):
         name_pep = pep_a.find('a')
-        title_name_general = name_pep['title'].split(' – ')[0]  # Название PEP
-        # из внешней таблицы
 
         td_pep = pep_a.find('td')
         abbr_pep = td_pep.find('abbr')
@@ -37,23 +35,18 @@ if __name__ == '__main__':
         response1 = session.get(pep_link)
         response1.encoding = 'utf-8'
         soup = BeautifulSoup(response1.text, 'lxml')
-        in_card_pep_name = soup.find('title').text.split(' – ')[0]
-        # Спарсенное наименование PEP внутри карточки
 
         status_in_card_pep = soup.find('abbr').text  # Спарсенный статус
         # внутри PEP
+        compare_list_statuses.append({status_pep_general: status_in_card_pep})
 
-        in_card_statuses.append(status_in_card_pep)
-
-        compare_statuses_dict = {status_pep_general: status_in_card_pep}
-        compare_list_statuses.append(compare_statuses_dict)
-
-    status_count = Counter(in_card_statuses)
+    status_count = Counter(compare_statuses(compare_list_statuses))
+    total = len(compare_list_statuses)
     table = PrettyTable()
     table.field_names = ['Статус', 'Количество']
     for status, count in sorted(status_count.items()):
         table.add_row([status, count])
     table.add_row(['----------', '----------'])
-    table.add_row(['Total', sum(status_count.values())])
+    table.add_row(['Total', total])
     print(table)
-    compare_statuses(compare_list_statuses)
+    file_outputs(dict(status_count), total)
