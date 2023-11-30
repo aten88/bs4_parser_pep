@@ -17,4 +17,4 @@ def file_outputs(data, total):
         for status, count in data.items():
             writer.writerow([status, count])
         writer.writerow(['Total', total])
-        logging.info(f'Парсер создал файл сsv: {file_name}')
+        logging.info(f'Парсер создал файл: {file_name}')
