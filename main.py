@@ -1,9 +1,10 @@
 from urllib.parse import urljoin
+from collections import Counter
+
 import requests_cache
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 from prettytable import PrettyTable
-from collections import Counter
 
 from constants import PEPS_DOC_URL
 from utils import compare_statuses
@@ -27,7 +28,7 @@ if __name__ == '__main__':
         name_pep = pep_a.find('a')
         td_pep = pep_a.find('td')
         abbr_pep = td_pep.find('abbr')
-        status_pep_general = abbr_pep.text[1:]  # Статус PEP из общей таблицы
+        status_pep_general = abbr_pep.text[1:]
 
         href = name_pep['href']
         pep_link = urljoin(PEPS_DOC_URL, href)
@@ -35,17 +36,16 @@ if __name__ == '__main__':
         response_link.encoding = 'utf-8'
         soup = BeautifulSoup(response_link.text, 'lxml')
 
-        status_in_card_pep = soup.find('abbr').text  # Спарсенный статус
-        # внутри PEP
+        status_in_card_pep = soup.find('abbr').text
         compare_list_statuses.append({status_pep_general: status_in_card_pep})
 
     status_count = Counter(compare_statuses(compare_list_statuses))
-    total = len(compare_list_statuses)
+    total_peps = len(compare_list_statuses)
     table = PrettyTable()
     table.field_names = ['Статус', 'Количество']
     for status, count in sorted(status_count.items()):
         table.add_row([status, count])
     table.add_row(['----------', '----------'])
-    table.add_row(['Total', total])
+    table.add_row(['Total', total_peps])
+    file_outputs(dict(status_count), total_peps)
     print(table)
-    file_outputs(dict(status_count), total)
