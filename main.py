@@ -25,16 +25,15 @@ if __name__ == '__main__':
 
     for pep_a in tqdm(peps_tr):
         name_pep = pep_a.find('a')
-
         td_pep = pep_a.find('td')
         abbr_pep = td_pep.find('abbr')
         status_pep_general = abbr_pep.text[1:]  # Статус PEP из общей таблицы
 
         href = name_pep['href']
         pep_link = urljoin(PEPS_DOC_URL, href)
-        response1 = session.get(pep_link)
-        response1.encoding = 'utf-8'
-        soup = BeautifulSoup(response1.text, 'lxml')
+        response_link = session.get(pep_link)
+        response_link.encoding = 'utf-8'
+        soup = BeautifulSoup(response_link.text, 'lxml')
 
         status_in_card_pep = soup.find('abbr').text  # Спарсенный статус
         # внутри PEP

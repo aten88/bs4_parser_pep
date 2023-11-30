@@ -2,7 +2,7 @@ from constants import EXPECTED_STATUS
 
 
 def compare_statuses(combined_list):
-    """ Метод проверки соответствия статусов PEP"""
+    """ Метод проверки соответствия статусов PEP. """
     updated_list = []
     for item in combined_list:
         key, value = list(item.items())[0]

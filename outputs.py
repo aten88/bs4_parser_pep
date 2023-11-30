@@ -4,6 +4,7 @@ from constants import BASE_DIR
 
 
 def file_outputs(data, total):
+    """ Метод вывода данных PEP. """
     results_dir = BASE_DIR / 'results'
     results_dir.mkdir(exist_ok=True)
     file_name = results_dir / 'status_table.csv'
