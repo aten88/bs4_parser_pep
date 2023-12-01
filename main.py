@@ -7,10 +7,10 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 from prettytable import PrettyTable
 
-from constants import PEPS_DOC_URL
-from utils import compare_statuses
-from outputs import file_outputs
-from configs import configure_argument_parser, configure_logging
+from src.constants import PEPS_DOC_URL
+from src.utils import compare_statuses
+from src.outputs import file_outputs
+from src.configs import configure_argument_parser, configure_logging
 
 
 def parser_pep(session):

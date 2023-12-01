@@ -3,7 +3,9 @@ import datetime as dt
 import logging
 
 from prettytable import PrettyTable
+
 from src.constants import BASE_DIR, DATETIME_FORMAT
+from src.configs import configure_logging
 
 
 def control_output(results, cli_args):
@@ -44,3 +46,18 @@ def file_output(results, cli_args):
         writer = csv.writer(f, dialect='unix')
         writer.writerows(results)
     logging.info(f'Файл с результатами был сохранён: {file_path}')
+
+
+def file_outputs(data, total):
+    """ Метод вывода данных PEP. """
+    configure_logging()
+    results_dir = BASE_DIR / 'results'
+    results_dir.mkdir(exist_ok=True)
+    file_name = results_dir / 'status_table.csv'
+    with open(file_name, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f, dialect='unix')
+        writer.writerow(['Статус', 'Количество'])
+        for status, count in data.items():
+            writer.writerow([status, count])
+        writer.writerow(['Total', total])
+        logging.info(f'Парсер создал файл: {file_name}')
