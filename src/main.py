@@ -26,7 +26,7 @@ def whats_new(session):
     section_by_python = div_with_ul.find_all(
         'li', attrs={'class': 'toctree-l1'}
     )
-    results = [('Ссылка на статью', 'Заголовок', 'Редактор, автор')]
+    results = [('Ссылка на статью', 'Заголовок', 'Редактор, Автор')]
     for section in tqdm(section_by_python):
         version_a_tag = find_tag(section, 'a')
         href = version_a_tag['href']
@@ -95,9 +95,8 @@ def download(session):
     logging.info(f'Архив был загружен и сохранён: {archive_path}')
 
 
-def parser_pep(session):
-    configure_logging()
-    logging.info('Парсер запущен!')
+def pep(session):
+    """ Метод получения статсуов PEP. """
     response = session.get(PEPS_DOC_URL)
     response.encoding = 'utf-8'
     soup = BeautifulSoup(response.text, 'lxml')
@@ -137,14 +136,13 @@ def parser_pep(session):
     table.add_row(['Total', total_peps])
     file_outputs(dict(status_count), total_peps)
     print(table)
-    logging.info('Парсер завершил работу!')
 
 
 MODE_TO_FUNCTION = {
     'whats-new': whats_new,
     'latest-versions': latest_versions,
     'download': download,
-    'pep': parser_pep
+    'pep': pep
 }
 
 

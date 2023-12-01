@@ -12,7 +12,7 @@ def control_output(results, cli_args):
     output = cli_args.output
 
     if output == 'pretty':
-        pretty_outputs(results)
+        pretty_output(results)
     elif output == 'file':
         file_output(results, cli_args)
     else:
@@ -25,7 +25,7 @@ def default_outputs(results):
         print(*row)
 
 
-def pretty_outputs(results):
+def pretty_output(results):
 
     table = PrettyTable()
     table.field_names = results[0]

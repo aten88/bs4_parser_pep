@@ -8,7 +8,7 @@ from constants import BASE_DIR, LOG_FORMAT, DT_FORMAT
 def configure_argument_parser(available_modes):
     parser = argparse.ArgumentParser(description="Парсер документации Python.")
     parser.add_argument(
-        'mode', choices=available_modes, help='Режимы работы парсера.'
+        'mode', choices=available_modes, help='Режимы работы парсера'
     )
     parser.add_argument(
         '-c', '--clear-cache',
