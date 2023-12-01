@@ -2,9 +2,9 @@ import logging
 
 from requests import RequestException
 
-from src.exceptions import ParserFindTagException
-from src.constants import EXPECTED_STATUS
-from src.configs import configure_logging
+from exceptions import ParserFindTagException
+from constants import EXPECTED_STATUS
+from configs import configure_logging
 
 
 def get_response(session, url):
