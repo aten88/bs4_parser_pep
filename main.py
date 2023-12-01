@@ -40,7 +40,11 @@ if __name__ == '__main__':
         soup = BeautifulSoup(response_link.text, 'lxml')
 
         status_in_card_pep = soup.find('abbr').text
-        compare_list_statuses.append({status_pep_general: status_in_card_pep})
+        compare_list_statuses.append({status_pep_general: {
+                    'pep_link': pep_link,
+                    'status_in_card': status_in_card_pep
+                }}
+        )
 
     status_count = Counter(compare_statuses(compare_list_statuses))
     total_peps = len(compare_list_statuses)
