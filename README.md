@@ -16,7 +16,6 @@
 [![Python](https://img.shields.io/badge/Python-3.9-3776AB?logo=python)](https://www.python.org/)
 [![BeautifulSoup](https://img.shields.io/badge/BeautifulSoup4-4.9-3776AB)](https://www.crummy.com/software/BeautifulSoup/)
 [![Requests](https://img.shields.io/badge/Requests-2.27-3776AB)](https://requests.readthedocs.io/)
-[![Prettytable](https://ptable.readthedocs.io/en/latest/tutorial.html)]
 
 # Запуск проекта
 Клонировать репозиторий и перейти в директорию проекта:
