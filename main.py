@@ -10,13 +10,12 @@ from prettytable import PrettyTable
 from constants import PEPS_DOC_URL
 from utils import compare_statuses
 from outputs import file_outputs
-from configs import configure_logging
+from configs import configure_argument_parser, configure_logging
 
 
-if __name__ == '__main__':
+def parser_pep(session):
     configure_logging()
     logging.info('Парсер запущен!')
-    session = requests_cache.CachedSession()
     response = session.get(PEPS_DOC_URL)
     response.encoding = 'utf-8'
     soup = BeautifulSoup(response.text, 'lxml')
@@ -57,3 +56,22 @@ if __name__ == '__main__':
     file_outputs(dict(status_count), total_peps)
     print(table)
     logging.info('Парсер завершил работу!')
+
+
+MODE_TO_FUNCTION = {
+    'pep': parser_pep
+}
+
+
+def main():
+    arg_parser = configure_argument_parser(MODE_TO_FUNCTION.keys())
+    args = arg_parser.parse_args()
+    session = requests_cache.CachedSession()
+    if args.clear_cache:
+        session.cache.clear()
+    parser_mode = args.mode
+    MODE_TO_FUNCTION[parser_mode](session)
+
+
+if __name__ == '__main__':
+    main()
