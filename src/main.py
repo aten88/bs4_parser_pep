@@ -6,15 +6,15 @@ import requests_cache
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from constants import BASE_DIR, PEPS_DOC_URL
-from configs import configure_argument_parser, configure_logging
-from outputs import control_output
-from utils import get_response, find_tag
+from src.constants import BASE_DIR, MAIN_DOC_URL
+from src.configs import configure_argument_parser, configure_logging
+from src.outputs import control_output
+from src.utils import get_response, find_tag
 
 
 def whats_new(session):
     """ Парсер обновления документации по Python. """
-    what_new_url = urljoin(PEPS_DOC_URL, 'whatsnew/')
+    what_new_url = urljoin(MAIN_DOC_URL, 'whatsnew/')
     response = get_response(session, what_new_url)
     if response is None:
         return
@@ -43,7 +43,7 @@ def whats_new(session):
 
 def latest_versions(session):
     """ Парсер версий Python и их состояния. """
-    response = get_response(session, PEPS_DOC_URL)
+    response = get_response(session, MAIN_DOC_URL)
     if response is None:
         return
     soup = BeautifulSoup(response.text, 'lxml')
@@ -70,7 +70,7 @@ def latest_versions(session):
 
 def download(session):
     """ Парсер архива Python. """
-    download_urls = urljoin(PEPS_DOC_URL, 'download.html')
+    download_urls = urljoin(MAIN_DOC_URL, 'download.html')
     response = get_response(session, download_urls)
     if response is None:
         return
