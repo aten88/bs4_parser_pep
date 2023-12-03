@@ -1,27 +1,30 @@
 import re
 from urllib.parse import urljoin
 import logging
-from collections import Counter
 
 import requests_cache
-from bs4 import BeautifulSoup
 from tqdm import tqdm
-from prettytable import PrettyTable
 
-from constants import BASE_DIR, MAIN_DOC_URL, PEPS_DOC_URL
+from constants import (
+    BASE_DIR, MAIN_DOC_URL,
+    PEPS_DOC_URL, EXPECTED_STATUS, DEFAULT_ENCODING
+)
 from configs import configure_argument_parser, configure_logging
-from outputs import control_output, file_outputs
-from utils import get_response, find_tag, compare_statuses
+from outputs import control_output
+from utils import get_response, find_tag, get_soup
 
 
 def whats_new(session):
-    """ Парсер обновления документации по Python. """
+    """ Парсер обновления документации по Python """
     what_new_url = urljoin(MAIN_DOC_URL, 'whatsnew/')
     response = get_response(session, what_new_url)
     if response is None:
         return
-    soup = BeautifulSoup(response.text, features='lxml')
-    main_div = find_tag(soup, 'section', attrs={'id': 'what-s-new-in-python'})
+    main_div = find_tag(
+        get_soup(response.text, features='lxml'),
+        'section',
+        attrs={'id': 'what-s-new-in-python'}
+    )
     div_with_ul = find_tag(main_div, 'div', attrs={'class': 'toctree-wrapper'})
     section_by_python = div_with_ul.find_all(
         'li', attrs={'class': 'toctree-l1'}
@@ -34,9 +37,8 @@ def whats_new(session):
         response = get_response(session, version_link)
         if response is None:
             continue
-        soup = BeautifulSoup(response.text, features='lxml')
-        h1 = find_tag(soup, 'h1').text
-        dl = find_tag(soup, 'dl').text
+        h1 = find_tag(get_soup(response.text, features='lxml'), 'h1').text
+        dl = find_tag(get_soup(response.text, features='lxml'), 'dl').text
         dl.replace('\n', ' ')
         results.append((version_link, h1, dl))
 
@@ -44,12 +46,14 @@ def whats_new(session):
 
 
 def latest_versions(session):
-    """ Парсер версий Python и их состояния. """
+    """ Парсер версий Python и их состояния """
     response = get_response(session, MAIN_DOC_URL)
     if response is None:
         return
-    soup = BeautifulSoup(response.text, 'lxml')
-    sidebar = find_tag(soup, 'div', {'class': 'sphinxsidebarwrapper'})
+    sidebar = find_tag(
+        get_soup(response.text, 'lxml'),
+        'div', {'class': 'sphinxsidebarwrapper'}
+    )
     ul_tags = sidebar.find_all('ul')
     for ul in ul_tags:
         if 'All version' in ul.text:
@@ -71,13 +75,14 @@ def latest_versions(session):
 
 
 def download(session):
-    """ Парсер архива Python. """
+    """ Парсер архива Python """
     download_urls = urljoin(MAIN_DOC_URL, 'download.html')
     response = get_response(session, download_urls)
     if response is None:
         return
-    soup = BeautifulSoup(response.text, 'lxml')
-    main_tag = find_tag(soup, 'div', {'role': 'main'})
+    main_tag = find_tag(
+        get_soup(response.text, 'lxml'), 'div', {'role': 'main'}
+    )
     table_tag = find_tag(main_tag, 'table', {'class': 'docutils'})
     pdf_a4_tag = find_tag(
         table_tag, 'a', {'href': re.compile(r'.+pdf-a4\.zip$')}
@@ -96,15 +101,14 @@ def download(session):
 
 
 def pep(session):
-    """ Метод получения статсуов PEP. """
+    """ Метод получения статусов PEP """
     response = session.get(PEPS_DOC_URL)
-    response.encoding = 'utf-8'
-    soup = BeautifulSoup(response.text, 'lxml')
-
-    num_index_section = soup.find('section', attrs={'id': 'numerical-index'})
+    response.encoding = DEFAULT_ENCODING
+    num_index_section = get_soup(response.text, 'lxml').find(
+        'section', attrs={'id': 'numerical-index'}
+    )
     peps_body_table = num_index_section.find('tbody')
     peps_tr = peps_body_table.find_all('tr')
-
     compare_list_statuses = []
 
     for pep_a in tqdm(peps_tr):
@@ -117,25 +121,43 @@ def pep(session):
         pep_link = urljoin(PEPS_DOC_URL, href)
         response_link = session.get(pep_link)
         response_link.encoding = 'utf-8'
-        soup = BeautifulSoup(response_link.text, 'lxml')
-
-        status_in_card_pep = soup.find('abbr').text
+        status_in_card_pep = get_soup(
+            response_link.text, 'lxml'
+        ).find('abbr').text
         compare_list_statuses.append({status_pep_general: {
                     'pep_link': pep_link,
                     'status_in_card': status_in_card_pep
                 }}
         )
+    configure_logging()
 
-    status_count = Counter(compare_statuses(compare_list_statuses))
-    total_peps = len(compare_list_statuses)
-    table = PrettyTable()
-    table.field_names = ['Статус', 'Количество']
-    for status, count in sorted(status_count.items()):
-        table.add_row([status, count])
-    table.add_row(['----------', '----------'])
-    table.add_row(['Total', total_peps])
-    file_outputs(dict(status_count), total_peps)
-    print(table)
+    results = []
+
+    for item in compare_list_statuses:
+        key, value = list(item.items())[0]
+        pep_link = value['pep_link']
+        status_in_card_pep = value['status_in_card']
+        expected_status = EXPECTED_STATUS.get(key)
+        if expected_status is None:
+            logging.error(
+                f'\n'
+                f'{pep_link}\n'
+                f'Статус в карточке: {key}'
+                f'Ожидаемые статусы: {status_in_card_pep}'
+            )
+            continue
+        if status_in_card_pep in expected_status:
+            results.append(status_in_card_pep)
+        else:
+            logging.error(
+                f'\n'
+                f'Несовпадающие статусы:\n'
+                f'{pep_link}\n'
+                f'Статус в карточке: {status_in_card_pep}\n'
+                f'Ожидаемые статусы: {expected_status}\n'
+            )
+    total = len(compare_list_statuses)
+    return results, total
 
 
 MODE_TO_FUNCTION = {
@@ -149,7 +171,6 @@ MODE_TO_FUNCTION = {
 def main():
     configure_logging()
     logging.info('Парсер запущен!')
-
     arg_parser = configure_argument_parser(MODE_TO_FUNCTION.keys())
     args = arg_parser.parse_args()
     logging.info(f'Аргументы командной строки: {args}')
@@ -157,9 +178,14 @@ def main():
     if args.clear_cache:
         session.cache.clear()
     parser_mode = args.mode
-    results = MODE_TO_FUNCTION[parser_mode](session)
-    if results is not None:
-        control_output(results, args)
+    try:
+        results = MODE_TO_FUNCTION[parser_mode](session)
+        if results is not None:
+            control_output(results, args, total=results[1])
+    except Exception as e:
+        logging.exception(
+            f'Неверный аргумент ожидалось {parser_mode} получено {e}'
+        )
     logging.info('Парсер завершил работу. ')
 
 
