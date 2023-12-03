@@ -16,4 +16,6 @@ EXPECTED_STATUS = {
     '': ('Draft', 'Active'),
 }
 LOG_FORMAT = '"%(asctime)s - [%(levelname)s] - %(message)s"'
-DT_FORMAT = '%d.%m.%Y %H:%M:%S'
+LOGS_DIRECTORY = 'logs'
+LOG_FILENAME = 'parser.log'
+RESULTS_DIRECTORY = 'results'

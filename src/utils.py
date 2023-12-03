@@ -7,11 +7,11 @@ from constants import EXPECTED_STATUS
 from configs import configure_logging
 
 
-def get_response(session, url):
+def get_response(session, url, encoding='utf-8'):
     """Метод получения ответа от сервера. """
     try:
         response = session.get(url)
-        response.encoding = 'utf-8'
+        response.encoding = encoding
         return response
     except RequestException:
         logging.exception(
