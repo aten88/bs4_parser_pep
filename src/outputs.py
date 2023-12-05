@@ -1,7 +1,6 @@
 import csv
 import datetime as dt
 import logging
-from collections import Counter
 
 from prettytable import PrettyTable
 
@@ -10,52 +9,43 @@ from constants import (
     RESULTS_DIRECTORY, DEFAULT_ENCODING,
     PRETTY_MODE, FILE_MODE
 )
-from configs import configure_logging
 
 
-def control_output(results, cli_args, total=None):
+def control_output(results, cli_args):
     """ Метод вариантов вывода данных """
     output = cli_args.output
 
     if output == PRETTY_MODE:
-        pretty_output(results, total)
+        pretty_output(results)
     elif output == FILE_MODE:
-        file_output(results, cli_args, total)
+        file_output(results, cli_args)
     else:
-        default_outputs(results, total)
+        default_outputs(results)
 
 
-def default_outputs(results, total):
+def default_outputs(results):
     """ Вывод данных без аргументов """
-    if isinstance(total, int):
-        for row in results[0]:
-            print(*row)
-    else:
-        for row in results:
-            print(*row)
+    # if results[0][2] == 'Total':
+    #     print('Total')  # Допилить эту фичу
+    for row in results:
+        print(*row)
 
 
-def pretty_output(results, total):
+def pretty_output(results):
     """ Вывод данных в формате Prettytable """
-    if isinstance(total, int):
-        status_count = Counter(results[0])
-        table = PrettyTable()
-        table.field_names = ['Статус', 'Количество']
-        for status, count in sorted(status_count.items()):
-            table.add_row([status, count])
-        table.add_row(['----------', '----------'])
-        table.add_row(['Total', total])
-        print(table)
-    else:
-        table = PrettyTable()
-        table.field_names = results[0]
-        table.align = 'l'
-        table.add_rows(results[1:])
-        print(table)
+    # if results[0][2] == 'Total':
+    #     print('Total')  # Допилить эту фичу
+    table = PrettyTable()
+    table.field_names = results[0]
+    table.align = 'l'
+    table.add_rows(results[1:])
+    print(table)
 
 
-def file_output(results, cli_args, total):
+def file_output(results, cli_args):
     """ Создание файла csv Python/PEP """
+    # if results[0][2] == 'Total':
+    #     print('Total')  # Допилить эту фичу
     results_dir = BASE_DIR / RESULTS_DIRECTORY
     results_dir.mkdir(exist_ok=True)
     parser_mode = cli_args.mode
@@ -63,18 +53,7 @@ def file_output(results, cli_args, total):
     now_formatted = now.strftime(DATETIME_FORMAT)
     file_name = f'{parser_mode}_{now_formatted}.csv'
     file_path = results_dir / file_name
-    if isinstance(total, int):
-        configure_logging()
-        count_results = Counter(results[0])
-        with open(file_path, 'w', newline='', encoding=DEFAULT_ENCODING) as f:
-            writer = csv.writer(f, dialect='unix')
-            writer.writerow(['Статус', 'Количество'])
-            for status, count in count_results.items():
-                writer.writerow([status, count])
-            writer.writerow(['Total', total])
-        logging.info(f'Парсер создал файл: {file_path}')
-    else:
-        with open(file_path, 'w', encoding=DEFAULT_ENCODING) as f:
-            writer = csv.writer(f, dialect='unix')
-            writer.writerows(results)
-        logging.info(f'Файл с результатами был сохранён: {file_path}')
+    with open(file_path, 'w', encoding=DEFAULT_ENCODING) as f:
+        writer = csv.writer(f, dialect='unix')
+        writer.writerows(results)
+    logging.info(f'Файл с результатами был сохранён: {file_path}')

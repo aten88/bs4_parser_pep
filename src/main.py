@@ -1,6 +1,7 @@
 import re
 from urllib.parse import urljoin
 import logging
+from collections import defaultdict
 
 import requests_cache
 from tqdm import tqdm
@@ -24,6 +25,8 @@ def whats_new(session):
         'section',
         attrs={'id': 'what-s-new-in-python'}
     )
+    if main_div is None:
+        return []
     div_with_ul = find_tag(main_div, 'div', attrs={'class': 'toctree-wrapper'})
     section_by_python = div_with_ul.find_all(
         'li', attrs={'class': 'toctree-l1'}
@@ -51,6 +54,8 @@ def latest_versions(session):
         get_soup(session, MAIN_DOC_URL, 'lxml'),
         'div', {'class': 'sphinxsidebarwrapper'}
     )
+    if sidebar is None:
+        return []
     ul_tags = sidebar.find_all('ul')
     for ul in ul_tags:
         if 'All version' in ul.text:
@@ -77,6 +82,8 @@ def download(session):
     main_tag = find_tag(
         get_soup(session, download_urls, 'lxml'), 'div', {'role': 'main'}
     )
+    if main_tag is None:
+        return []
     table_tag = find_tag(main_tag, 'table', {'class': 'docutils'})
     pdf_a4_tag = find_tag(
         table_tag, 'a', {'href': re.compile(r'.+pdf-a4\.zip$')}
@@ -99,23 +106,27 @@ def pep(session):
     num_index_section = get_soup(session, PEPS_DOC_URL, 'lxml').find(
         'section', attrs={'id': 'numerical-index'}
     )
+    if num_index_section is None:
+        return []
+
     peps_body_table = num_index_section.find('tbody')
     peps_tr = peps_body_table.find_all('tr')
-    results = []
+
+    statuses_count = defaultdict(int)
     configure_logging()
-    all_statuses = 0
+
     for pep_a in tqdm(peps_tr):
         name_pep = pep_a.find('a')
         td_pep = pep_a.find('td')
         abbr_pep = td_pep.find('abbr')
         status_pep_general = abbr_pep.text[1:]
-        if status_pep_general is not None:
-            all_statuses += 1
+
         href = name_pep['href']
         pep_link = urljoin(PEPS_DOC_URL, href)
         status_in_card_pep = get_soup(
             session, pep_link, 'lxml'
         ).find('abbr').text
+
         expected_status = EXPECTED_STATUS.get(status_pep_general)
         if expected_status is None:
             logging.error(
@@ -125,8 +136,9 @@ def pep(session):
                 f'Ожидаемые статусы: {status_in_card_pep}'
             )
             continue
+
         if status_in_card_pep in expected_status:
-            results.append(status_in_card_pep)
+            statuses_count[status_in_card_pep] += 1
         else:
             logging.error(
                 f'\n'
@@ -136,7 +148,11 @@ def pep(session):
                 f'Ожидаемые статусы: {expected_status}\n'
             )
 
-    return results, all_statuses
+    results = [('Статус', 'Количество', 'Total')]
+    for status, count in statuses_count.items():
+        results.append((status, count, 633))
+
+    return results
 
 
 MODE_TO_FUNCTION = {
@@ -160,7 +176,7 @@ def main():
     try:
         results = MODE_TO_FUNCTION[parser_mode](session)
         if results is not None:
-            control_output(results, args, total=results[1])
+            control_output(results, args)
     except Exception as e:
         logging.exception(
             f'Неверный аргумент ожидалось {parser_mode} получено {e}'
