@@ -101,38 +101,27 @@ def pep(session):
     )
     peps_body_table = num_index_section.find('tbody')
     peps_tr = peps_body_table.find_all('tr')
-    compare_list_statuses = []
-
+    results = []
+    configure_logging()
+    all_statuses = 0
     for pep_a in tqdm(peps_tr):
         name_pep = pep_a.find('a')
         td_pep = pep_a.find('td')
         abbr_pep = td_pep.find('abbr')
         status_pep_general = abbr_pep.text[1:]
-
+        if status_pep_general is not None:
+            all_statuses += 1
         href = name_pep['href']
         pep_link = urljoin(PEPS_DOC_URL, href)
         status_in_card_pep = get_soup(
             session, pep_link, 'lxml'
         ).find('abbr').text
-        compare_list_statuses.append({status_pep_general: {
-                    'pep_link': pep_link,
-                    'status_in_card': status_in_card_pep
-                }}
-        )
-    configure_logging()
-
-    results = []
-
-    for item in compare_list_statuses:
-        key, value = list(item.items())[0]
-        pep_link = value['pep_link']
-        status_in_card_pep = value['status_in_card']
-        expected_status = EXPECTED_STATUS.get(key)
+        expected_status = EXPECTED_STATUS.get(status_pep_general)
         if expected_status is None:
             logging.error(
                 f'\n'
                 f'{pep_link}\n'
-                f'Статус в карточке: {key}'
+                f'Статус в карточке: {status_pep_general}'
                 f'Ожидаемые статусы: {status_in_card_pep}'
             )
             continue
@@ -146,8 +135,8 @@ def pep(session):
                 f'Статус в карточке: {status_in_card_pep}\n'
                 f'Ожидаемые статусы: {expected_status}\n'
             )
-    total = len(compare_list_statuses)
-    return results, total
+
+    return results, all_statuses
 
 
 MODE_TO_FUNCTION = {
