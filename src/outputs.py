@@ -7,7 +7,8 @@ from prettytable import PrettyTable
 
 from constants import (
     BASE_DIR, DATETIME_FORMAT,
-    RESULTS_DIRECTORY, DEFAULT_ENCODING
+    RESULTS_DIRECTORY, DEFAULT_ENCODING,
+    PRETTY_MODE, FILE_MODE
 )
 from configs import configure_logging
 
@@ -16,9 +17,9 @@ def control_output(results, cli_args, total=None):
     """ Метод вариантов вывода данных """
     output = cli_args.output
 
-    if output == 'pretty':
+    if output == PRETTY_MODE:
         pretty_output(results, total)
-    elif output == 'file':
+    elif output == FILE_MODE:
         file_output(results, cli_args, total)
     else:
         default_outputs(results, total)

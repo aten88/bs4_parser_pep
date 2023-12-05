@@ -7,21 +7,20 @@ from tqdm import tqdm
 
 from constants import (
     BASE_DIR, MAIN_DOC_URL,
-    PEPS_DOC_URL, EXPECTED_STATUS, DEFAULT_ENCODING
+    PEPS_DOC_URL, EXPECTED_STATUS,
+    WHATS_NEW_ENDPOINT, DOWNLOAD_ENDPOINT,
+    DOWNLOADS_DIR
 )
 from configs import configure_argument_parser, configure_logging
 from outputs import control_output
-from utils import get_response, find_tag, get_soup
+from utils import find_tag, get_soup
 
 
 def whats_new(session):
     """ Парсер обновления документации по Python """
-    what_new_url = urljoin(MAIN_DOC_URL, 'whatsnew/')
-    response = get_response(session, what_new_url)
-    if response is None:
-        return
+    what_new_url = urljoin(MAIN_DOC_URL, WHATS_NEW_ENDPOINT)
     main_div = find_tag(
-        get_soup(response.text, features='lxml'),
+        get_soup(session, what_new_url, features='lxml'),
         'section',
         attrs={'id': 'what-s-new-in-python'}
     )
@@ -34,11 +33,12 @@ def whats_new(session):
         version_a_tag = find_tag(section, 'a')
         href = version_a_tag['href']
         version_link = urljoin(what_new_url, href)
-        response = get_response(session, version_link)
-        if response is None:
-            continue
-        h1 = find_tag(get_soup(response.text, features='lxml'), 'h1').text
-        dl = find_tag(get_soup(response.text, features='lxml'), 'dl').text
+        h1 = find_tag(
+            get_soup(session, version_link, features='lxml'), 'h1'
+        ).text
+        dl = find_tag(
+            get_soup(session, version_link, features='lxml'), 'dl'
+        ).text
         dl.replace('\n', ' ')
         results.append((version_link, h1, dl))
 
@@ -47,11 +47,8 @@ def whats_new(session):
 
 def latest_versions(session):
     """ Парсер версий Python и их состояния """
-    response = get_response(session, MAIN_DOC_URL)
-    if response is None:
-        return
     sidebar = find_tag(
-        get_soup(response.text, 'lxml'),
+        get_soup(session, MAIN_DOC_URL, 'lxml'),
         'div', {'class': 'sphinxsidebarwrapper'}
     )
     ul_tags = sidebar.find_all('ul')
@@ -76,12 +73,9 @@ def latest_versions(session):
 
 def download(session):
     """ Парсер архива Python """
-    download_urls = urljoin(MAIN_DOC_URL, 'download.html')
-    response = get_response(session, download_urls)
-    if response is None:
-        return
+    download_urls = urljoin(MAIN_DOC_URL, DOWNLOAD_ENDPOINT)
     main_tag = find_tag(
-        get_soup(response.text, 'lxml'), 'div', {'role': 'main'}
+        get_soup(session, download_urls, 'lxml'), 'div', {'role': 'main'}
     )
     table_tag = find_tag(main_tag, 'table', {'class': 'docutils'})
     pdf_a4_tag = find_tag(
@@ -91,7 +85,7 @@ def download(session):
     archive_url = urljoin(download_urls, pdf_a4_link)
     filename = archive_url.split('/')[-1]
 
-    downloads_dir = BASE_DIR / 'downloads'
+    downloads_dir = BASE_DIR / DOWNLOADS_DIR
     downloads_dir.mkdir(exist_ok=True)
     archive_path = downloads_dir / filename
     response = session.get(archive_url)
@@ -102,9 +96,7 @@ def download(session):
 
 def pep(session):
     """ Метод получения статусов PEP """
-    response = session.get(PEPS_DOC_URL)
-    response.encoding = DEFAULT_ENCODING
-    num_index_section = get_soup(response.text, 'lxml').find(
+    num_index_section = get_soup(session, PEPS_DOC_URL, 'lxml').find(
         'section', attrs={'id': 'numerical-index'}
     )
     peps_body_table = num_index_section.find('tbody')
@@ -119,10 +111,8 @@ def pep(session):
 
         href = name_pep['href']
         pep_link = urljoin(PEPS_DOC_URL, href)
-        response_link = session.get(pep_link)
-        response_link.encoding = 'utf-8'
         status_in_card_pep = get_soup(
-            response_link.text, 'lxml'
+            session, pep_link, 'lxml'
         ).find('abbr').text
         compare_list_statuses.append({status_pep_general: {
                     'pep_link': pep_link,

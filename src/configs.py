@@ -5,7 +5,8 @@ import argparse
 from constants import (
     BASE_DIR, LOG_FORMAT,
     DATETIME_FORMAT, LOGS_DIRECTORY,
-    LOG_FILENAME, DEFAULT_ENCODING
+    LOG_FILENAME, DEFAULT_ENCODING,
+    PRETTY_MODE, FILE_MODE
 )
 
 
@@ -21,7 +22,7 @@ def configure_argument_parser(available_modes):
     )
     parser.add_argument(
         '-o', '--output',
-        choices=('pretty', 'file'),
+        choices=(PRETTY_MODE, FILE_MODE),
         help='Дополнительные способы вывода данных'
     )
     return parser

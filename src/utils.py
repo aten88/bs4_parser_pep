@@ -30,7 +30,10 @@ def find_tag(soup, tag, attrs=None):
     return searched_tag
 
 
-def get_soup(response, features):
+def get_soup(session, url, features):
     """ Метод получения супа """
-    soup = BeautifulSoup(response, features=features)
+    response = get_response(session, url)
+    if response is None:
+        return
+    soup = BeautifulSoup(response.text, features=features)
     return soup
