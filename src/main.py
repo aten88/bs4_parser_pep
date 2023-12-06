@@ -26,7 +26,7 @@ def whats_new(session):
         attrs={'id': 'what-s-new-in-python'}
     )
     if main_div is None:
-        return []
+        return
     div_with_ul = find_tag(main_div, 'div', attrs={'class': 'toctree-wrapper'})
     section_by_python = div_with_ul.find_all(
         'li', attrs={'class': 'toctree-l1'}
@@ -55,7 +55,7 @@ def latest_versions(session):
         'div', {'class': 'sphinxsidebarwrapper'}
     )
     if sidebar is None:
-        return []
+        return
     ul_tags = sidebar.find_all('ul')
     for ul in ul_tags:
         if 'All version' in ul.text:
@@ -83,7 +83,7 @@ def download(session):
         get_soup(session, download_urls, 'lxml'), 'div', {'role': 'main'}
     )
     if main_tag is None:
-        return []
+        return
     table_tag = find_tag(main_tag, 'table', {'class': 'docutils'})
     pdf_a4_tag = find_tag(
         table_tag, 'a', {'href': re.compile(r'.+pdf-a4\.zip$')}
@@ -107,7 +107,7 @@ def pep(session):
         'section', attrs={'id': 'numerical-index'}
     )
     if num_index_section is None:
-        return []
+        return
 
     peps_body_table = num_index_section.find('tbody')
     peps_tr = peps_body_table.find_all('tr')
@@ -148,9 +148,12 @@ def pep(session):
                 f'Ожидаемые статусы: {expected_status}\n'
             )
 
-    results = [('Статус', 'Количество', 'Total')]
+    results = [('Статус', 'Количество')]
     for status, count in statuses_count.items():
-        results.append((status, count, 633))
+        results.append((status, count))
+
+    total_count = len(peps_tr)
+    results.append(('Total', total_count))
 
     return results
 

@@ -36,5 +36,9 @@ def get_soup(session, url, features):
     response = get_response(session, url)
     if response is None:
         return None
-    soup = BeautifulSoup(response.text, features=features)
-    return soup
+    try:
+        soup = BeautifulSoup(response.text, features=features)
+        return soup
+    except Exception as e:
+        print(f'Не удалось получить суп: {e}')
+        return None

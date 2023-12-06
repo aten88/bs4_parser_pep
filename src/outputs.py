@@ -25,16 +25,12 @@ def control_output(results, cli_args):
 
 def default_outputs(results):
     """ Вывод данных без аргументов """
-    # if results[0][2] == 'Total':
-    #     print('Total')  # Допилить эту фичу
     for row in results:
         print(*row)
 
 
 def pretty_output(results):
     """ Вывод данных в формате Prettytable """
-    # if results[0][2] == 'Total':
-    #     print('Total')  # Допилить эту фичу
     table = PrettyTable()
     table.field_names = results[0]
     table.align = 'l'
@@ -44,8 +40,6 @@ def pretty_output(results):
 
 def file_output(results, cli_args):
     """ Создание файла csv Python/PEP """
-    # if results[0][2] == 'Total':
-    #     print('Total')  # Допилить эту фичу
     results_dir = BASE_DIR / RESULTS_DIRECTORY
     results_dir.mkdir(exist_ok=True)
     parser_mode = cli_args.mode
