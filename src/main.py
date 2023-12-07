@@ -25,8 +25,6 @@ def whats_new(session):
         'section',
         attrs={'id': 'what-s-new-in-python'}
     )
-    if main_div is None:
-        return
     div_with_ul = find_tag(main_div, 'div', attrs={'class': 'toctree-wrapper'})
     section_by_python = div_with_ul.find_all(
         'li', attrs={'class': 'toctree-l1'}
@@ -54,8 +52,6 @@ def latest_versions(session):
         get_soup(session, MAIN_DOC_URL, 'lxml'),
         'div', {'class': 'sphinxsidebarwrapper'}
     )
-    if sidebar is None:
-        return
     ul_tags = sidebar.find_all('ul')
     for ul in ul_tags:
         if 'All version' in ul.text:
@@ -82,8 +78,6 @@ def download(session):
     main_tag = find_tag(
         get_soup(session, download_urls, 'lxml'), 'div', {'role': 'main'}
     )
-    if main_tag is None:
-        return
     table_tag = find_tag(main_tag, 'table', {'class': 'docutils'})
     pdf_a4_tag = find_tag(
         table_tag, 'a', {'href': re.compile(r'.+pdf-a4\.zip$')}
@@ -106,9 +100,6 @@ def pep(session):
     num_index_section = get_soup(session, PEPS_DOC_URL, 'lxml').find(
         'section', attrs={'id': 'numerical-index'}
     )
-    if num_index_section is None:
-        return
-
     peps_body_table = num_index_section.find('tbody')
     peps_tr = peps_body_table.find_all('tr')
 
@@ -182,7 +173,7 @@ def main():
             control_output(results, args)
     except Exception as e:
         logging.exception(
-            f'Неверный аргумент ожидалось {parser_mode} получено {e}'
+            f'Ошибка в работе парсера {e}'
         )
     logging.info('Парсер завершил работу. ')
 

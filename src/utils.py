@@ -1,24 +1,20 @@
 import logging
 
-from requests import RequestException
 from bs4 import BeautifulSoup
 
-from exceptions import ParserFindTagException
+from exceptions import ParserFindTagException, ParserGetResponseException
 from constants import DEFAULT_ENCODING
 
 
 def get_response(session, url, encoding=DEFAULT_ENCODING):
     """ Метод получения ответа от сервера """
-    try:
-        response = session.get(url)
-        response.encoding = encoding
-        return response
-    except RequestException as e:
-        logging.exception(
-            f'Возникла ошибка при загрузке страницы: {url}\nОшибка: {e}',
-            stack_info=True
-        )
-        return None
+    response = session.get(url)
+    response.encoding = encoding
+    if not response:
+        error_msg = f'Не удалось загрузить страницу {url}'
+        logging.error(error_msg, stack_info=True)
+        raise ParserGetResponseException(error_msg)
+    return response
 
 
 def find_tag(soup, tag, attrs=None):
@@ -34,11 +30,5 @@ def find_tag(soup, tag, attrs=None):
 def get_soup(session, url, features):
     """ Метод получения супа """
     response = get_response(session, url)
-    if response is None:
-        return None
-    try:
-        soup = BeautifulSoup(response.text, features=features)
-        return soup
-    except Exception as e:
-        print(f'Не удалось получить суп: {e}')
-        return None
+    soup = BeautifulSoup(response.text, features=features)
+    return soup
